@@ -30,59 +30,53 @@ path {
 <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script src="//d3js.org/topojson.v1.min.js"></script>
 <script src="http://d3js.org/queue.v1.min.js"></script>
-<script src="d3.geo.tile.min.js"></script>
 <script>
 
-var width = 1960,
-    height = 1160;
+var width = 900,
+    height = 500;
 
 var sf = [-122.417, 37.775],
     ny = [-74.0064, 40.7142];
-
-//var path = d3.geo.path();
 
 var scale,
     translate,
     visibleArea, // minimum area threshold for points inside viewport
     invisibleArea; // minimum area threshold for points outside viewport
 
-var simplify = d3.geo.transform({
-  point: function(x, y, z) {
-    if (z < visibleArea) return;
-    x = x * scale + translate[0];
-    y = y * scale + translate[1];
-    if (x >= -10 && x <= width + 10 && y >= -10 && y <= height + 10 || z >= invisibleArea) this.stream.point(x, y);
-  }
-});
+// var simplify = d3.geo.transform({
+//   point: function(x, y, z) {
+//     if (z < visibleArea) return;
+//     x = x * scale + translate[0];
+//     y = y * scale + translate[1];
+//     if (x >= -10 && x <= width + 10 && y >= -10 && y <= height + 10 || z >= invisibleArea) this.stream.point(x, y);
+//   }
+// });
 
-var zoom = d3.behavior.zoom()
-    .size([width, height])
-    .on("zoom", zoomed);
+// var zoom = d3.behavior.zoom()
+//     .size([width, height])
+//     .on("zoom", zoomed);
 
-// var svg = d3.select("body").append("svg")
-//     .attr("width", width)
-//     .attr("height", height);
-
-// var projection = d3.geo.albersUsa()
-//  	.scale(1000)
-//  	.translate([width / 2, height / 2]);
-
-// var path = d3.geo.path()
-//  	.projection(projection);
-
-var projection = d3.geo.mercator()
-    .translate([0, 0])
-    .scale(4000);
-
-var canvas = d3.select("body").append("canvas")
+var svg = d3.select("body").append("svg")
     .attr("width", width)
     .attr("height", height);
 
-var context = canvas.node().getContext("2d");
+// var canvas = d3.select("body").append("canvas")
+//     .attr("width", width)
+//     .attr("height", height);
+
+// var context = canvas.node().getContext("2d");
+
+var projection = d3.geo.albersUsa()
+ 	.scale(1000)
+ 	.translate([width / 2, height / 2]);
+
+// var projection = d3.geo.mercator()
+//     .translate([0, 0])
+//     .scale(4000);
 
 var path = d3.geo.path()
-    .projection(simplify)
-    .context(context);
+ 	.projection(projection);
+
 
 queue()
 	.defer(d3.json, './topo/us-10m.json')
@@ -91,12 +85,12 @@ queue()
 
 function makeMyMap(error, states, cities) {
 
-	canvas
-      .datum(topojson.mesh(topojson.presimplify(states)))
-      .call(zoomTo(sf, 4).event)
-    .transition()
-      .duration(60 * 1000 / 89 * 2)
-      .each(jump);
+	// canvas
+ //      .datum(topojson.mesh(topojson.presimplify(states.objects.states)))
+ //      .call(zoomTo(sf, 4).event)
+ //    .transition()
+ //      .duration(60 * 1000 / 89 * 2)
+ //      .each(jump);
 
 //TODO:
 //Test out basic zoom functionality
@@ -106,52 +100,64 @@ function makeMyMap(error, states, cities) {
 //add display for each entrepreneur
 //
 
-	// canvas.append("path")
- //     .datum(topojson.feature(states, states.objects.land))
- //      .attr("d", path)
- //      .attr("class", "land-boundary");
+	svg.append("path")
+     .datum(topojson.feature(states, states.objects.land))
+      .attr("d", path)
+      .attr("class", "land-boundary");
 
-	// canvas.append('path')
-	// 	.datum(topojson.feature(states, states.objects.states))
-	// 		.attr('d', path)
-	// 		.attr('class', 'states');
+	svg.append('path')
+		.datum(topojson.feature(states, states.objects.states))
+			.attr('d', path)
+			.attr('class', 'states');
 
-	// canvas.selectAll('.cities')
-	// 	.data(cities.features)
-	// 	.enter()
-	// 	.append('path')
-	// 	.attr('d', path.pointRadius(5))
-	// 	.attr('class', 'cities');
+	svg.selectAll('.cities')
+		.data(cities.features)
+		.enter()
+		.append('path')
+		.attr('d', path.pointRadius(5))
+		.attr('class', 'cities');
 }
 
-function zoomTo(location, scale) {
-  var point = projection(location);
-  return zoom
-      .translate([width / 2 - point[0] * scale, height / 2 - point[1] * scale])
-      .scale(scale);
-}
 
-function zoomed(d) {
-  translate = zoom.translate();
-  scale = zoom.scale();
-  visibleArea = 1 / scale / scale;
-  invisibleArea = 200 * visibleArea;
-  context.clearRect(0, 0, width, height);
-  context.beginPath();
-  path(d);
-  context.stroke();
-}
+// d3.json("./topo/us-states.json", function(error, states) {
+//   if (error) throw error;
 
-function jump() {
-  var t = d3.select(this);
-  (function repeat() {
-    t = t.transition()
-        .call(zoomTo(ny, 6).event)
-      .transition()
-        .call(zoomTo(sf, 4).event)
-        .each("end", repeat);
-  })();
-}
+//   canvas
+//       .datum(topojson.mesh(topojson.presimplify(states)))
+//       .call(zoomTo(sf, 4).event)
+//     .transition()
+//       .duration(60 * 1000 / 89 * 2)
+//       .each(jump);
+// });
+
+// function zoomTo(location, scale) {
+//   var point = projection(location);
+//   return zoom
+//       .translate([width / 2 - point[0] * scale, height / 2 - point[1] * scale])
+//       .scale(scale);
+// }
+
+// function zoomed(d) {
+//   translate = zoom.translate();
+//   scale = zoom.scale();
+//   visibleArea = 1 / scale / scale;
+//   invisibleArea = 200 * visibleArea;
+//   context.clearRect(0, 0, width, height);
+//   context.beginPath();
+//   path(d);
+//   context.stroke();
+// }
+
+// function jump() {
+//   var t = d3.select(this);
+//   (function repeat() {
+//     t = t.transition()
+//         .call(zoomTo(ny, 6).event)
+//       .transition()
+//         .call(zoomTo(sf, 4).event)
+//         .each("end", repeat);
+//   })();
+// }
 
 // d3.json("./topo/us-10m.json", function(error, topology) {
 //   if (error) throw error;
