@@ -22,7 +22,21 @@ path {
 
 .cities {
 	fill: green;
-	opacity:0.7;
+  stroke: none;
+	opacity: 0.7;
+}
+
+div.tooltip {   
+  position: absolute;           
+  text-align: center;           
+  width: 60px;                  
+  height: 28px;                 
+  padding: 2px;             
+  font: 12px sans-serif;        
+  background: white;   
+  border: 0px;      
+  border-radius: 8px;           
+  pointer-events: none;         
 }
 
 </style>
@@ -81,9 +95,14 @@ var path = d3.geo.path()
 queue()
 	.defer(d3.json, './topo/us-10m.json')
 	.defer(d3.json, './topo/cities.json')
+  .defer(d3.json, './topo/ents.json')
 	.await(makeMyMap);
 
-function makeMyMap(error, states, cities) {
+var div = d3.select("body").append("div") 
+    .attr("class", "tooltip")       
+    .style("opacity", 0);
+
+function makeMyMap(error, states, cities, ents) {
 
 	// canvas
  //      .datum(topojson.mesh(topojson.presimplify(states.objects.states)))
@@ -115,7 +134,28 @@ function makeMyMap(error, states, cities) {
 		.enter()
 		.append('path')
 		.attr('d', path.pointRadius(5))
-		.attr('class', 'cities');
+		.attr('class', 'cities')
+    .on('mouseover', function (d) {
+      // console.log(d);
+      // console.log(d.properties.NAME);
+      div.transition()    
+                .duration(200)    
+                .style("opacity", .9);
+      div.text(d.properties.NAME)
+                .style("left", (d3.event.pageX) + "px")    
+                .style("top", (d3.event.pageY - 28) + "px");
+      d3.select(this).attr('d', path.pointRadius(8));
+    })
+    .on('mouseout', function (d) {
+      d3.select(this).attr('d', path.pointRadius(5));
+      div.transition()        
+           .duration(500)      
+           .style("opacity", 0);
+    })
+    .on('click', function(d) {
+      // console.log("rect");
+      d3.event.stopPropagation();
+    });
 }
 
 
